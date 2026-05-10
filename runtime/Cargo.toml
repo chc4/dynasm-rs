@@ -15,7 +15,7 @@ license.workspace = true
 
 
 [dependencies]
-memmap2 = "0.9.9"
+memmap2 = { version = "0.9.9", path = "../../memmap2-rs" }
 byteorder = "1.5.0"
 fnv = "1.0.7"
 dynasm = { version = "=5.0.0", path = "../plugin" }

@@ -4,7 +4,7 @@
 use std::ops::{Deref, DerefMut};
 use std::io;
 
-use memmap2::{Mmap, MmapMut};
+use memmap2::{Mmap, MmapMut, MmapOptions};
 
 use crate::AssemblyOffset;
 
@@ -60,6 +60,23 @@ impl ExecutableBuffer {
         })
     }
 
+    /// Create a new executable buffer, backed by a buffer of size `size`, attempting to hint that
+    /// it should be allocated at address `hint`.
+    /// It will start with an initialized length of 0.
+    pub fn new_with_hint(size: usize, hint: *mut core::ffi::c_void) -> io::Result<ExecutableBuffer> {
+        let buffer = if size == 0 {
+            None
+        } else {
+            Some(MmapOptions::new().len(size).hint(hint).map_anon()?.make_exec()?)
+        };
+
+        Ok(ExecutableBuffer {
+            length: 0,
+            buffer
+        })
+    }
+
+
     /// Query the backing size of this executable buffer
     pub fn size(&self) -> usize {
         self.buffer.as_ref().map(|b| b.len()).unwrap_or(0)
@@ -88,6 +105,21 @@ impl MutableBuffer {
             None
         } else {
             Some(MmapMut::map_anon(size)?)
+        };
+
+        Ok(MutableBuffer {
+            length: 0,
+            buffer
+        })
+    }
+
+    /// Create a new mutable buffer, backed by a buffer of size `size`.
+    /// It will start with an initialized length of 0.
+    pub fn new_with_hint(size: usize, hint: *mut core::ffi::c_void) -> io::Result<MutableBuffer> {
+        let buffer = if size == 0 {
+            None
+        } else {
+            Some(MmapOptions::new().len(size).hint(hint).map_anon()?)
         };
 
         Ok(MutableBuffer {
